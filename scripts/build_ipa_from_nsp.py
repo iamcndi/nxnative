@@ -2068,8 +2068,10 @@ def main(args=None):
         cap = capture_shaders(repo, game, patched, work, env, logs, g, 'gl') if glcap else None
         ios = build_gl_shaders(py, repo, [rfs.source(game), game / 'ExeFS/main'] + dlc_roms + ([cap] if cap else []), sh, env, logs, g, reuse=not ALLOW_DAMAGED, mac=mac, provisional=bool(provisional or derived))
     else:
-        # Trinity packs and legacy Unreal paks: the split decodes them with the packed version's own decoder (Oodle, LZ5), in the Mac host built for the profile
-        oodle = (lambda: {'DM_OODLE_HOST': str(build_mac_host(repo, work / 'tools/dmhost', env, logs, g)), 'DM_OODLE_MODULES': str(patched)}) if src['oodle_packs'][0] or src['ue_legacy'][0] else None
+        # Trinity / Oodle packs need the Mac host's game decoder. ue_legacy alone does not: OCTOPATH TRAVELER II (Zlib/LZ4) decodes in Python (uepak.Pak.read);
+        # only LZ5 (DRAGON QUEST XI S) calls shader_split.oodle at read time, which then asks for DM_OODLE_HOST. Building the host for every ue_legacy game
+        # stopped Intel Macs on OT2 for no reason (the host is arm64-only).
+        oodle = (lambda: {'DM_OODLE_HOST': str(build_mac_host(repo, work / 'tools/dmhost', env, logs, g)), 'DM_OODLE_MODULES': str(patched)}) if src['oodle_packs'][0] else None
         own = bool(provisional or derived)   # the shader tables come from this build's split (the profile's are checked otherwise)
         def derive_installed_dlc():   # called only after all registered non-DLC shader rows and facts matched
             nonlocal g, derived

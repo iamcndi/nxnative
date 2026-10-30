@@ -20,3 +20,17 @@ OBS = {
     (0x353f78c, 21, 'a9417bfd', 'GCreateMalloc: the allocator object is in x19, before it is used: the host puts its vtable in; orig ldp x29, x30, [sp, #0x10]'),
   ],
 }
+
+# How general each patch is and could be (dm/tools/docs_patches.py "Binding", listed in docs/agents/game-patches.md): what, its binding now, the loosest it could have (goal),
+# purpose, why; blocked or kept: why the gap stays open (cannot close yet, or left open on purpose); checked: what was checked on game files (else a judgement)
+BINDING = [
+    {'what': 'FMallocBinned3 constructor call cut, with the gate that puts the host allocator in (hle_uemalloc.c)', 'now': 'build', 'goal': 'engine', 'purpose': 'address space',
+     'checked': 'the discovery run on this main, 2026-10-29',
+     'why': 'found without a build ID on the five Unreal games on the game drive (OCTOPATH TRAVELER 0 and II, DRAGON QUEST VII Reimagined, Pikmin 4, FINAL FANTASY RESONANCE; checked '
+            '2026-10-29): the "Binned3" name, its getter, the one vtable holding it, the layout from the getter\'s slot, the one function other than slots 0 and 1 that stores the '
+            'vtable (the constructor) and its one call site, whose x0 is the object. A rewriter rule must apply RELA relocations and gate at the call'},
+    {'what': 'engine region 62 GB → 4064 MB', 'now': 'build', 'goal': 'engine', 'purpose': 'address space',
+     'why': 'the other Unreal games cap the region with -SwitchVirtualAddressSpaceSize= (game_args); this build reserves it only without the argument, and with it the base stayed 0 '
+            'and the first commit failed',
+     'blocked': "open: whether that argument path is the game's own or a host fault"},
+]
